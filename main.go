@@ -1,9 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"log/slog"
 	"net"
+	"time"
+
+	"github.com/Hoobbaaboobba/lx-kv/client"
 )
 
 const defaultListenAddr = ":6379"
@@ -51,7 +55,14 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleRawMessage(rawMsg []byte) error {
-    fmt.Println(string(rawMsg))
+    cmd, err := parseCommand(string(rawMsg))
+    if err != nil {
+        return err
+    }
+    switch v := cmd.(type) {
+    case SetCommand:
+        slog.Info("set", "key", v.key, "val", v.val)
+    }
     return nil
 }
 
@@ -91,9 +102,15 @@ func (s *Server) handleConn(conn net.Conn) {
 }
 
 func main() {
-    server := NewServer(Config{})
+    go func() {
+        server := NewServer(Config{})
+        log.Fatal(server.Start())
+    }()
+    time.Sleep(time.Second)
 
-    if err := server.Start(); err != nil {
-        panic(err)
+    client := client.New("localhost:6379")
+    if err := client.Set(context.TODO(), "foo", "bar"); err != nil {
+        log.Fatal(err)
     }
+
 }

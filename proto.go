@@ -33,11 +33,9 @@ func parseCommand(raw string) (Command, error) {
             log.Fatal(err)
         }
 
-        fmt.Printf("Read %s\n", v.Type())
-
         if v.Type() == resp.Array {
-            for _, v := range v.Array() {
-                switch v.String() {
+            for _, value := range v.Array() {
+                switch value.String() {
                 case CommandSET:
                     if len(v.Array()) != 3 {
                         return nil, fmt.Errorf("invalid number of variables for SET command")
@@ -51,5 +49,5 @@ func parseCommand(raw string) (Command, error) {
             }
         }
     }
-    return "foo", nil
+    return nil, fmt.Errorf("invalid or unknown command: %s", raw)
 }

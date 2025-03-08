@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
 	"log"
 	"log/slog"
 	"net"
-	"time"
-
-	"github.com/Hoobbaaboobba/lx-kv/client"
 )
 
 const defaultListenAddr = ":6379"
@@ -115,25 +112,10 @@ func (s *Server) handleConn(conn net.Conn) {
 }
 
 func main() {
-    server := NewServer(Config{})
-    go func() {
-        log.Fatal(server.Start())
-    }()
-    time.Sleep(time.Second)
-
-    c, err := client.New("localhost:6379")
-    if err != nil {
-        log.Fatal(err)
-    }
-    for i := 0; i < 10; i++ {
-        if err := c.Set(context.TODO(), fmt.Sprintf("foo_%d", i), fmt.Sprintf("bar_%d", i)); err != nil {
-            log.Fatal(err)
-        }
-        fmt.Println("SET =>", fmt.Sprintf("bar_%d", i))
-        val, err := c.Get(context.TODO(), fmt.Sprintf("foo_%d", i))
-        if err != nil {
-            log.Fatal(err)
-        }
-        fmt.Println("GET =>", val)
-    }
+    listenAddr := flag.String("listenAddr", defaultListenAddr, "listen address of the lx-kv server")
+    flag.Parse()
+    server := NewServer(Config{
+        ListenAddr: *listenAddr,
+    })
+    log.Fatal(server.Start())
 }

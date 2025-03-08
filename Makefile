@@ -1,5 +1,6 @@
-build:
-	@go build -o bin/lx-kv
-
 run: build
-	@./bin/lx-kv
+	@./bin/lx-kv --listenAddr :6379
+build:
+	@go build -o bin/lx-kv .
+test:
+	@go test -v ./...

@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net"
 	"reflect"
+
+	"github.com/tidwall/resp"
 )
 
 const defaultListenAddr = ":6379"
@@ -66,27 +68,31 @@ func (s *Server) handleMessage(msg Message) error {
 	slog.Info("got message from client", "type", reflect.TypeOf(msg.cmd))
 
 	switch v := msg.cmd.(type) {
+	case ClientCommand:
+		err := resp.NewWriter(msg.peer.conn).WriteString("OK")
+		if err != nil {
+			return err
+		}
 	case SetCommand:
 		if err := s.kv.Set(v.key, v.val); err != nil {
 			return err
 		}
-		_, err := msg.peer.Send([]byte("OK\r\n"))
+		err := resp.NewWriter(msg.peer.conn).WriteString("OK")
 		if err != nil {
-			return fmt.Errorf("peer send error: %s", err)
+			return err
 		}
 	case GetCommand:
 		val, ok := s.kv.Get(v.key)
 		if !ok {
 			return fmt.Errorf("key not found")
 		}
-		_, err := msg.peer.Send(val)
+		err := resp.NewWriter(msg.peer.conn).WriteString(string(val))
 		if err != nil {
-			return fmt.Errorf("peer send error: %s", err)
+			return err
 		}
 	case HelloCommand:
 		spec := map[string]string{
 			"server": "redis",
-			"role":   "master",
 		}
 		_, err := msg.peer.Send(respWriteMap(spec))
 		if err != nil {

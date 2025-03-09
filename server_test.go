@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -10,21 +9,15 @@ import (
 	"time"
 
 	"github.com/Hoobbaaboobba/lx-kv/client"
-	"github.com/tidwall/resp"
 )
 
 func TestFooBar(t *testing.T) {
-	buf := &bytes.Buffer{}
-	rw := resp.NewWriter(buf)
-	rw.WriteString("OK")
-	fmt.Println(buf.String())
-
 	in := map[string]string{
-		"first":  "1",
-		"second": "2",
+		"server":  "redis",
+		"version": "6.0",
 	}
 	out := respWriteMap(in)
-	fmt.Println(out)
+	fmt.Println(string(out))
 }
 
 func TestSerevrWithClients(t *testing.T) {
